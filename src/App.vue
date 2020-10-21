@@ -1,26 +1,34 @@
 <template>
-  <img alt="Vue logo" src="./assets/logo.png" />
-  <HelloWorld msg="Welcome to Your Vue.js + TypeScript App" />
+  <router-view></router-view>
 </template>
 
 <script lang="ts">
 import { defineComponent } from 'vue'
-import HelloWorld from './components/HelloWorld.vue'
 
 export default defineComponent({
   name: 'App',
-  components: {
-    HelloWorld,
-  },
 })
 </script>
 
 <style lang="stylus">
+@import '~@/color.styl'
+
 #app
-  font-family Avenir, Helvetica, Arial, sans-serif
+  font-family 'PingFang SC', 'Helvetica Neue', Helvetica, Arial, sans-serif
   -webkit-font-smoothing antialiased
   -moz-osx-font-smoothing grayscale
-  text-align center
-  color #2c3e50
-  margin-top 60px
+  color $black
+
+*
+  box-sizing border-box
+body, ul, p
+  margin 0
+  padding 0
+ul
+  list-style none
+
+@font-face
+  font-family 'Quicksand'
+  src url('~@/assets/font/Quicksand-SemiBold.ttf')
+  font-weight 600
 </style>
