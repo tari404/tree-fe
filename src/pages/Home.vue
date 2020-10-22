@@ -1,15 +1,15 @@
 <template>
   <div id="home">
-    <div id="post-list" @mousewheel="onWheel">
-      <ul :style="{ transform: `translateY(${-scrollY}px)` }">
-        <li v-for="(post, i) in posts" :key="i" class="post" :latest="i ? undefined : true">
+    <div id="post-list">
+      <ul :style="{ transform: `translateY(${-realScrollY}px)` }">
+        <li v-for="(post, pidx) in posts" :key="pidx" class="post" :latest="pidx ? undefined : true">
           <p class="post-date">{{ post.date }}</p>
           <div class="stems">
             <i class="chapter-symbol"></i>
             <ul>
               <li v-for="(stem, i) in post.stems" :key="i">
-                <i class="title-symbol">{{ stem.origin }}</i>
-                <p class="origin">{{ stem.origin }}</p>
+                <i v-if="pidx === 0" class="title-symbol">{{ stem.origin }}</i>
+                <p class="leaf">{{ stem.origin }}</p>
                 <p class="content">{{ stem.body }}</p>
               </li>
             </ul>
@@ -18,7 +18,8 @@
             <i class="chapter-symbol"></i>
             <ul>
               <li v-for="(leaf, i) in post.leaves" :key="i">
-                <p class="content">{{ leaf }}</p>
+                <i v-if="pidx === 0" class="title-symbol">{{ leaf }}</i>
+                <p class="leaf">{{ leaf }}</p>
               </li>
             </ul>
           </div>
@@ -29,12 +30,16 @@
       <div class="scroll-bar"></div>
       <div v-if="overHeight" :style="{ transform: `translateY(${scrollBarOffsetY}px)` }" class="scroll-span"></div>
     </div>
+    <div class="right-part">
+      <img src="@/assets/images/bud.png" alt="bud" />
+    </div>
   </div>
 </template>
 
 <script lang="ts">
 import { defineComponent } from 'vue'
 
+import { debounce } from '@/assets/utils'
 import { Post } from '@/assets/types/post'
 
 const testPosts: Post[] = [
@@ -56,7 +61,7 @@ const testPosts: Post[] = [
     date: '10.4',
     stems: [
       {
-        origin: '',
+        origin: 'glsl中noice库函数的工作原理',
         body: `在混用了CDN和modules来进行\`three.js\`的开发时，出现了从modules里引入的\`RawShaderMaterial\`可用，但是从CDN里引入的\`RawShaderMaterial\`工作不正常的问题。`,
       },
     ],
@@ -74,6 +79,10 @@ export default defineComponent({
       overHeight: 0,
 
       scrollY: 0,
+      realScrollY: 0,
+      scrollElasticity: 0.1,
+
+      raf: 0,
     }
   },
   computed: {
@@ -81,17 +90,21 @@ export default defineComponent({
       if (this.overHeight === 0) {
         return 0
       } else {
-        const p = Math.max(0, Math.min(1, this.scrollY / this.overHeight))
+        const p = Math.max(0, Math.min(1, this.realScrollY / this.overHeight))
         return (this.containerHeight - 42) * p
       }
     },
   },
   mounted() {
     window.addEventListener('resize', this.updateSize)
+    document.body.addEventListener('wheel', this.onWheel)
     this.updateSize()
+    this.raf = requestAnimationFrame(this.updateWheel)
   },
   beforeUnmount() {
     window.removeEventListener('resize', this.updateSize)
+    document.body.removeEventListener('wheel', this.onWheel)
+    cancelAnimationFrame(this.raf)
   },
   methods: {
     updateSize() {
@@ -101,8 +114,23 @@ export default defineComponent({
       this.overHeight = Math.max(0, list.scrollHeight - list.offsetHeight)
     },
     onWheel(e: WheelEvent) {
+      this.scrollElasticity = 0.1
       const scrollY = this.scrollY + e.deltaY
-      this.scrollY = Math.max(-100, Math.min(this.overHeight + 100, scrollY))
+      this.scrollY = Math.max(-80, Math.min(this.overHeight + 80, scrollY))
+      this.checkWheelPos()
+    },
+    checkWheelPos: debounce(function (this: any) {
+      this.scrollElasticity = 0.06
+      this.scrollY = Math.max(0, Math.min(this.overHeight, this.scrollY))
+    }, 160),
+    updateWheel() {
+      const dis = this.scrollY - this.realScrollY
+      if (Math.abs(dis) > 1) {
+        this.realScrollY += dis * this.scrollElasticity + Math.sign(dis)
+      } else if (dis) {
+        this.realScrollY = this.scrollY
+      }
+      this.raf = requestAnimationFrame(this.updateWheel)
     },
   },
 })
@@ -133,6 +161,10 @@ export default defineComponent({
     font-size 36px
     color $red
     opacity .6
+  .leaf
+    font-size 18px
+    margin-bottom 16px
+    position relative
 .stems
   display flex
   line-height 28px
@@ -140,7 +172,7 @@ export default defineComponent({
     position relative
     &:not(:first-child)
       margin-top 40px
-  .chapter-symbol
+  .chapter-symbol, .title-symbol
     background-color $green
   .content
     padding 0 14px
@@ -152,10 +184,8 @@ export default defineComponent({
   li
     position relative
     &:not(:first-child)
-      margin-top 20px
-    padding 0 14px
-    color $midGray
-  .chapter-symbol
+      margin-top 16px
+  .chapter-symbol, .title-symbol
     background-color $orange
 
 .post[latest]
@@ -178,50 +208,36 @@ export default defineComponent({
       content '\eea2'
   .leaves .chapter-symbol:before
       content '\f0d4'
-  .title-symbol
-    position absolute
-    content ''
-    top 0
-    left 0
-    padding 3px 16px
-    width 100%
-    line-height 26px
-    font-size 18px
-    border-radius 16px
-    background-color $green
-    color transparent
-  .origin
-    margin 22px 0 14px
+  .leaf
+    margin-top 22px
     padding 3px 16px
     line-height 26px
-    font-size 18px
-    opacity .9
+    // opacity .8
 
 .scroll-bar-container
-  padding 0 12px
+  margin 0 18px
   position relative
   overflow hidden
+  cursor pointer
   &:hover .scroll-bar
     opacity 1
 .scroll-bar
-  margin 0 18px
+  margin 0 12px
   width 6px
   height 100%
   border-radius 3px
   background-color $green
   opacity .4
   transition opacity .14s
-  cursor pointer
 .scroll-span
   position absolute
   top 6px
-  left 18px
+  left 0
   width 30px
   height 30px
   border-radius 50%
   background-color $green
   border solid 6px $white
-  cursor pointer
   &:before
     content ''
     position absolute
@@ -239,4 +255,23 @@ export default defineComponent({
   height 12px
   display flex
   border-radius 50%
+.title-symbol
+  position absolute
+  content ''
+  top 0
+  left 0
+  padding 3px 16px
+  line-height 26px
+  font-size 18px
+  border-radius 16px
+  color transparent
+  opacity .4
+
+// right
+.right-part
+  flex 1 1 auto
+  display flex
+  justify-content center
+  align-items center
+  opacity .8
 </style>
