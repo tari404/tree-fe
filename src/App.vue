@@ -18,6 +18,7 @@ export default defineComponent({
   -webkit-font-smoothing antialiased
   -moz-osx-font-smoothing grayscale
   color $black
+  background-color $white
 
 *
   box-sizing border-box
@@ -30,5 +31,9 @@ ul
 @font-face
   font-family 'Quicksand'
   src url('~@/assets/font/Quicksand-SemiBold.ttf')
+  font-weight 400
+@font-face
+  font-family 'Quicksand'
+  src url('~@/assets/font/Quicksand-Bold.ttf')
   font-weight 600
 </style>

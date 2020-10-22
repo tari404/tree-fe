@@ -1,21 +1,34 @@
 <template>
   <div id="home">
-    <ul class="post-list">
-      <li v-for="post in posts" :key="post.data" class="post">
-        <p class="post-date">{{ post.date }}</p>
-        <div class="stems">
-          <i class="chapter-symbol"></i>
-          <ul>
-            <li v-for="(stem, i) in post.stems" :key="i">
-              <i class="title-symbol"></i>
-              <p class="origin"></p>
-              <p class="content">{{ stem.body }}</p>
-            </li>
-          </ul>
-        </div>
-      </li>
-    </ul>
-    <div class="scroll-bar"></div>
+    <div id="post-list" @mousewheel="onWheel">
+      <ul :style="{ transform: `translateY(${-scrollY}px)` }">
+        <li v-for="(post, i) in posts" :key="i" class="post" :latest="i ? undefined : true">
+          <p class="post-date">{{ post.date }}</p>
+          <div class="stems">
+            <i class="chapter-symbol"></i>
+            <ul>
+              <li v-for="(stem, i) in post.stems" :key="i">
+                <i class="title-symbol">{{ stem.origin }}</i>
+                <p class="origin">{{ stem.origin }}</p>
+                <p class="content">{{ stem.body }}</p>
+              </li>
+            </ul>
+          </div>
+          <div class="leaves">
+            <i class="chapter-symbol"></i>
+            <ul>
+              <li v-for="(leaf, i) in post.leaves" :key="i">
+                <p class="content">{{ leaf }}</p>
+              </li>
+            </ul>
+          </div>
+        </li>
+      </ul>
+    </div>
+    <div class="scroll-bar-container">
+      <div class="scroll-bar"></div>
+      <div v-if="overHeight" :style="{ transform: `translateY(${scrollBarOffsetY}px)` }" class="scroll-span"></div>
+    </div>
   </div>
 </template>
 
@@ -56,7 +69,41 @@ export default defineComponent({
   data() {
     return {
       posts: testPosts,
+
+      containerHeight: 0,
+      overHeight: 0,
+
+      scrollY: 0,
     }
+  },
+  computed: {
+    scrollBarOffsetY(): number {
+      if (this.overHeight === 0) {
+        return 0
+      } else {
+        const p = Math.max(0, Math.min(1, this.scrollY / this.overHeight))
+        return (this.containerHeight - 42) * p
+      }
+    },
+  },
+  mounted() {
+    window.addEventListener('resize', this.updateSize)
+    this.updateSize()
+  },
+  beforeUnmount() {
+    window.removeEventListener('resize', this.updateSize)
+  },
+  methods: {
+    updateSize() {
+      const list = this.$el.querySelector('#post-list') as HTMLElement
+
+      this.containerHeight = list.offsetHeight
+      this.overHeight = Math.max(0, list.scrollHeight - list.offsetHeight)
+    },
+    onWheel(e: WheelEvent) {
+      const scrollY = this.scrollY + e.deltaY
+      this.scrollY = Math.max(-100, Math.min(this.overHeight + 100, scrollY))
+    },
   },
 })
 </script>
@@ -72,17 +119,20 @@ export default defineComponent({
 
   display flex
 
-.post-list
+#post-list
   padding 0 40px
   flex 0 0 600px
   overflow hidden
-  >li:not(:first-child)
+.post
+  &:not(:first-child)
     margin-top 100px
-.post-date
-  margin-bottom 32px
-  font-family 'Quicksand'
-  font-size 54px
-  color $red
+  .post-date
+    margin-bottom 32px
+    font-family 'Quicksand'
+    font-weight 600
+    font-size 36px
+    color $red
+    opacity .6
 .stems
   display flex
   line-height 28px
@@ -92,27 +142,67 @@ export default defineComponent({
       margin-top 40px
   .chapter-symbol
     background-color $green
+  .content
+    padding 0 14px
+    color $midGray
+.leaves
+  margin-top 40px
+  display flex
+  line-height 28px
+  li
+    position relative
+    &:not(:first-child)
+      margin-top 20px
+    padding 0 14px
+    color $midGray
+  .chapter-symbol
+    background-color $orange
+
+.post[latest]
+  .post-date
+    font-weight 400
+    font-size 54px
+    opacity 1
+  .chapter-symbol
+    margin 0 20px 0 0
+    flex 0 0 60px
+    height 60px
+    justify-content center
+    align-items center
+    font-family 'remixicon' !important
+    font-style normal
+    &:before
+      color $white
+      font-size 40px
+  .stems .chapter-symbol:before
+      content '\eea2'
+  .leaves .chapter-symbol:before
+      content '\f0d4'
   .title-symbol
     position absolute
     content ''
     top 0
     left 0
+    padding 3px 16px
     width 100%
-    height 32px
+    line-height 26px
+    font-size 18px
     border-radius 16px
     background-color $green
+    color transparent
   .origin
-    margin 22px 0 16px
-    padding 0 16px
-    min-height 30px
-    line-height 30px
+    margin 22px 0 14px
+    padding 3px 16px
+    line-height 26px
     font-size 18px
-    font-weight 600
-    position relative
-  .content
-    padding 0 14px
-    color $midGray
+    opacity .9
 
+.scroll-bar-container
+  padding 0 12px
+  position relative
+  overflow hidden
+  &:hover .scroll-bar
+    opacity 1
 .scroll-bar
   margin 0 18px
   width 6px
@@ -121,14 +211,32 @@ export default defineComponent({
   background-color $green
   opacity .4
   transition opacity .14s
-  &:hover
-    opacity 1
+  cursor pointer
+.scroll-span
+  position absolute
+  top 6px
+  left 18px
+  width 30px
+  height 30px
+  border-radius 50%
+  background-color $green
+  border solid 6px $white
+  cursor pointer
+  &:before
+    content ''
+    position absolute
+    top 6px
+    left 6px
+    width 6px
+    height 6px
+    border-radius 50%
+    background-color $white
 
 // common
 .chapter-symbol
-  margin-right 20px
-  flex 0 0 60px
-  height 60px
-  display block
+  margin 8px 44px 8px 24px
+  flex 0 0 12px
+  height 12px
+  display flex
   border-radius 50%
 </style>
