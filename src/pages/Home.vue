@@ -26,9 +26,9 @@
         </li>
       </ul>
     </div>
-    <div class="scroll-bar-container">
-      <div class="scroll-bar"></div>
-      <div v-if="overHeight" :style="{ transform: `translateY(${scrollBarOffsetY}px)` }" class="scroll-span"></div>
+    <div class="scroll-bar-container" @mousedown="touchBar">
+      <div class="scroll-bar" :hold="scrollElasticity > 0.15 ? true : undefined"></div>
+      <div v-if="sbsc.scrollable" :style="{ transform: `translateY(${scrollBarOffsetY}px)` }" class="scroll-span" />
     </div>
     <div class="right-part">
       <img src="@/assets/images/bud.png" alt="bud" />
@@ -39,7 +39,7 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 
-import { debounce } from '@/assets/utils'
+import { debounce, ScrollBarSizeCalculator } from '@/assets/utils'
 import { Post } from '@/assets/types/post'
 
 const testPosts: Post[] = [
@@ -75,24 +75,19 @@ export default defineComponent({
     return {
       posts: testPosts,
 
-      containerHeight: 0,
-      overHeight: 0,
-
       scrollY: 0,
       realScrollY: 0,
       scrollElasticity: 0.1,
 
       raf: 0,
+
+      scrollBar: null as HTMLElement | null,
+      sbsc: new ScrollBarSizeCalculator(0, 60, 0, 12),
     }
   },
   computed: {
     scrollBarOffsetY(): number {
-      if (this.overHeight === 0) {
-        return 0
-      } else {
-        const p = Math.max(0, Math.min(1, this.realScrollY / this.overHeight))
-        return (this.containerHeight - 42) * p
-      }
+      return this.sbsc.a2b(this.realScrollY)
     },
   },
   mounted() {
@@ -100,6 +95,8 @@ export default defineComponent({
     document.body.addEventListener('wheel', this.onWheel)
     this.updateSize()
     this.raf = requestAnimationFrame(this.updateWheel)
+
+    this.scrollBar = this.$el.querySelector('.scroll-bar-container') as HTMLElement
   },
   beforeUnmount() {
     window.removeEventListener('resize', this.updateSize)
@@ -109,20 +106,19 @@ export default defineComponent({
   methods: {
     updateSize() {
       const list = this.$el.querySelector('#post-list') as HTMLElement
-
-      this.containerHeight = list.offsetHeight
-      this.overHeight = Math.max(0, list.scrollHeight - list.offsetHeight)
+      this.sbsc.updateSize(list.scrollHeight - list.offsetHeight, list.offsetHeight - 42)
+      this.scrollY = this.sbsc.trim(this.scrollY)
     },
     onWheel(e: WheelEvent) {
       this.scrollElasticity = 0.1
-      const scrollY = this.scrollY + e.deltaY
-      this.scrollY = Math.max(-80, Math.min(this.overHeight + 80, scrollY))
+      this.scrollY = this.sbsc.a2a(this.scrollY + e.deltaY)
       this.checkWheelPos()
     },
     checkWheelPos: debounce(function (this: any) {
-      this.scrollElasticity = 0.06
-      this.scrollY = Math.max(0, Math.min(this.overHeight, this.scrollY))
+      this.scrollElasticity *= 0.6
+      this.scrollY = this.sbsc.trim(this.scrollY)
     }, 160),
+
     updateWheel() {
       const dis = this.scrollY - this.realScrollY
       if (Math.abs(dis) > 1) {
@@ -131,6 +127,34 @@ export default defineComponent({
         this.realScrollY = this.scrollY
       }
       this.raf = requestAnimationFrame(this.updateWheel)
+    },
+
+    touchBar(e: MouseEvent) {
+      if (!this.sbsc.scrollable) {
+        return
+      }
+      this.scrollElasticity = 0.2
+      const y = e.pageY - this.scrollBar!.offsetTop - 21
+      this.scrollY = this.sbsc.b2a(y)
+
+      document.body.addEventListener('mousemove', this.moveBar)
+      document.body.addEventListener('mouseup', this.removeBarEvent)
+      document.body.addEventListener('mouseleave', this.removeBarEvent)
+    },
+    moveBar(e: MouseEvent) {
+      if (!this.sbsc.scrollable) {
+        return
+      }
+      e.preventDefault()
+      this.scrollElasticity = 0.2
+      const y = e.pageY - this.scrollBar!.offsetTop - 21
+      this.scrollY = this.sbsc.b2a(y)
+    },
+    removeBarEvent() {
+      this.checkWheelPos()
+      document.body.removeEventListener('mousemove', this.moveBar)
+      document.body.removeEventListener('mouseup', this.removeBarEvent)
+      document.body.removeEventListener('mouseleave', this.removeBarEvent)
     },
   },
 })
@@ -142,13 +166,14 @@ export default defineComponent({
 #home
   margin auto
   padding 8vh 0
-  max-width 1220px
+  max-width 1400px
   height 100vh
 
   display flex
 
 #post-list
   padding 0 40px
+  max-width 100%
   flex 0 0 600px
   overflow hidden
 .post
@@ -165,6 +190,8 @@ export default defineComponent({
     font-size 18px
     margin-bottom 16px
     position relative
+    text-decoration underline
+    cursor pointer
 .stems
   display flex
   line-height 28px
@@ -212,6 +239,7 @@ export default defineComponent({
     margin-top 22px
     padding 3px 16px
     line-height 26px
+    text-decoration none
     // opacity .8
 
 .scroll-bar-container
@@ -229,6 +257,8 @@ export default defineComponent({
   background-color $green
   opacity .4
   transition opacity .14s
+  &[hold]
+    opacity 1
 .scroll-span
   position absolute
   top 6px
@@ -274,4 +304,8 @@ export default defineComponent({
   justify-content center
   align-items center
   opacity .8
+
+@media screen and (max-width 800px)
+  .scroll-bar-container, .right-part
+    display none
 </style>
