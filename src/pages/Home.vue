@@ -39,7 +39,7 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 
-import { debounce, ScrollBarSizeCalculator } from '@/assets/utils'
+import { debounce, ScrollBarSizeCalculator } from '@/assets/lib'
 import { Post } from '@/assets/types/post'
 
 const testPosts: Post[] = [
@@ -75,6 +75,8 @@ export default defineComponent({
     return {
       posts: testPosts,
 
+      touchY: 0,
+
       scrollY: 0,
       realScrollY: 0,
       scrollElasticity: 0.1,
@@ -93,6 +95,7 @@ export default defineComponent({
   mounted() {
     window.addEventListener('resize', this.updateSize)
     document.body.addEventListener('wheel', this.onWheel)
+    document.body.addEventListener('touchstart', this.onTouch, { passive: false })
     this.updateSize()
     this.raf = requestAnimationFrame(this.updateWheel)
 
@@ -101,6 +104,7 @@ export default defineComponent({
   beforeUnmount() {
     window.removeEventListener('resize', this.updateSize)
     document.body.removeEventListener('wheel', this.onWheel)
+    document.body.removeEventListener('touchstart', this.onTouch)
     cancelAnimationFrame(this.raf)
   },
   methods: {
@@ -112,6 +116,24 @@ export default defineComponent({
     onWheel(e: WheelEvent) {
       this.scrollElasticity = 0.1
       this.scrollY = this.sbsc.a2a(this.scrollY + e.deltaY)
+      this.checkWheelPos()
+    },
+    onTouch(e: TouchEvent) {
+      e.preventDefault()
+      this.touchY = e.touches[0].pageY
+      document.body.addEventListener('touchmove', this.onTouchMove, { passive: false })
+      document.body.addEventListener('touchend', this.onTouchEnd)
+    },
+    onTouchMove(e: TouchEvent) {
+      e.preventDefault()
+      const dY = e.touches[0].pageY - this.touchY
+      this.scrollElasticity = 0.1
+      this.scrollY = this.sbsc.a2a(this.scrollY - dY)
+      this.touchY = e.touches[0].pageY
+    },
+    onTouchEnd() {
+      document.body.removeEventListener('touchmove', this.onTouchMove)
+      document.body.removeEventListener('touchend', this.onTouchEnd)
       this.checkWheelPos()
     },
     checkWheelPos: debounce(function (this: any) {
