@@ -1,5 +1,5 @@
 <template>
-  <div id="home">
+  <div id="home" :style="{ height: pageHeight }">
     <div id="post-list">
       <ul :style="{ transform: `translateY(${-realScrollY}px)` }">
         <li v-for="(post, pidx) in posts" :key="pidx" class="post" :latest="pidx ? undefined : true">
@@ -37,9 +37,9 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue'
+import { defineComponent, nextTick } from 'vue'
 
-import { debounce, ScrollBarSizeCalculator } from '@/assets/lib'
+import { debounce, Scrollable, ScrollBarSizeCalculator } from '@/assets/lib'
 import { Post } from '@/assets/types/post'
 
 const testPosts: Post[] = [
@@ -68,6 +68,9 @@ const testPosts: Post[] = [
     leaves: ['glsl中noice库函数的工作原理', 'three.js库中包含的UnrealBloomPass是如何在后期产生绚丽的发光效果的'],
   },
 ]
+for (let i = 0; i < 2; i++) {
+  testPosts.push(...testPosts)
+}
 
 export default defineComponent({
   name: 'Home',
@@ -75,8 +78,9 @@ export default defineComponent({
     return {
       posts: testPosts,
 
-      touchY: 0,
+      pageHeight: window.innerHeight + 'px',
 
+      touchY: 0,
       scrollY: 0,
       realScrollY: 0,
       scrollElasticity: 0.1,
@@ -85,6 +89,7 @@ export default defineComponent({
 
       scrollBar: null as HTMLElement | null,
       sbsc: new ScrollBarSizeCalculator(0, 60, 0, 12),
+      s: undefined as Scrollable | undefined,
     }
   },
   computed: {
@@ -94,47 +99,42 @@ export default defineComponent({
   },
   mounted() {
     window.addEventListener('resize', this.updateSize)
-    document.body.addEventListener('wheel', this.onWheel)
-    document.body.addEventListener('touchstart', this.onTouch, { passive: false })
     this.updateSize()
+    this.s = new Scrollable(
+      document.body,
+      (dy) => {
+        this.scrollElasticity = 0.3
+        this.scrollY += dy
+
+        // TODO: not grace enough
+        return this.sbsc.a2a(this.scrollY) - this.sbsc.a2a(this.scrollY - dy)
+        // this.scrollY = this.sbsc.a2a(this.scrollY + dy)
+      },
+      () => {
+        this.scrollElasticity *= 0.6
+        this.scrollY = this.sbsc.trim(this.scrollY)
+      }
+    )
     this.raf = requestAnimationFrame(this.updateWheel)
 
     this.scrollBar = this.$el.querySelector('.scroll-bar-container') as HTMLElement
   },
   beforeUnmount() {
     window.removeEventListener('resize', this.updateSize)
-    document.body.removeEventListener('wheel', this.onWheel)
-    document.body.removeEventListener('touchstart', this.onTouch)
+    if (this.s) {
+      this.s.clear()
+    }
     cancelAnimationFrame(this.raf)
   },
   methods: {
     updateSize() {
-      const list = this.$el.querySelector('#post-list') as HTMLElement
-      this.sbsc.updateSize(list.scrollHeight - list.offsetHeight, list.offsetHeight - 42)
-      this.scrollY = this.sbsc.trim(this.scrollY)
-    },
-    onWheel(e: WheelEvent) {
-      this.scrollElasticity = 0.1
-      this.scrollY = this.sbsc.a2a(this.scrollY + e.deltaY)
-      this.checkWheelPos()
-    },
-    onTouch(e: TouchEvent) {
-      e.preventDefault()
-      this.touchY = e.touches[0].pageY
-      document.body.addEventListener('touchmove', this.onTouchMove, { passive: false })
-      document.body.addEventListener('touchend', this.onTouchEnd)
-    },
-    onTouchMove(e: TouchEvent) {
-      e.preventDefault()
-      const dY = e.touches[0].pageY - this.touchY
-      this.scrollElasticity = 0.1
-      this.scrollY = this.sbsc.a2a(this.scrollY - dY)
-      this.touchY = e.touches[0].pageY
-    },
-    onTouchEnd() {
-      document.body.removeEventListener('touchmove', this.onTouchMove)
-      document.body.removeEventListener('touchend', this.onTouchEnd)
-      this.checkWheelPos()
+      this.pageHeight = window.innerHeight + 'px'
+
+      nextTick(() => {
+        const list = this.$el.querySelector('#post-list') as HTMLElement
+        this.sbsc.updateSize(list.scrollHeight - list.offsetHeight, list.offsetHeight - 42)
+        this.scrollY = this.sbsc.trim(this.scrollY)
+      })
     },
     checkWheelPos: debounce(function (this: any) {
       this.scrollElasticity *= 0.6
@@ -142,11 +142,12 @@ export default defineComponent({
     }, 160),
 
     updateWheel() {
-      const dis = this.scrollY - this.realScrollY
+      const scrollY = this.sbsc.a2a(this.scrollY)
+      const dis = scrollY - this.realScrollY
       if (Math.abs(dis) > 1) {
         this.realScrollY += dis * this.scrollElasticity + Math.sign(dis)
       } else if (dis) {
-        this.realScrollY = this.scrollY
+        this.realScrollY = scrollY
       }
       this.raf = requestAnimationFrame(this.updateWheel)
     },
@@ -328,6 +329,8 @@ export default defineComponent({
   opacity .8
 
 @media screen and (max-width 800px)
+  #home
+    padding 0
   .scroll-bar-container, .right-part
     display none
 </style>

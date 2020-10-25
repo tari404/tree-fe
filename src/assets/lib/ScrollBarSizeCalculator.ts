@@ -33,9 +33,15 @@ export class ScrollBarSizeCalculator {
 
   public a2a(offsetY: number) {
     if (offsetY < 0) {
-      return Math.max(offsetY, -this.bufferH)
+      const x = Math.abs(offsetY)
+      const y = (Math.log(x + 0.5) + Math.LN2) * this.bufferH * 0.125
+      // const y = (Math.sqrt(x / this.bufferH + 0.25) - 0.5) * this.bufferH
+      return -y
     } else if (offsetY > this.effectiveScrollH) {
-      return Math.min(offsetY, this.bufferH + this.effectiveScrollH)
+      const x = offsetY - this.effectiveScrollH
+      const y = (Math.log(x + 0.5) + Math.LN2) * this.bufferH * 0.125
+      // const y = (Math.sqrt(x / this.bufferH + 0.25) - 0.5) * this.bufferH
+      return y + this.effectiveScrollH
     } else {
       return offsetY
     }
