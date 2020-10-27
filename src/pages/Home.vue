@@ -1,7 +1,7 @@
 <template>
   <div id="home" :style="{ height: pageHeight }">
     <div id="post-list">
-      <ul :style="{ transform: `translateY(${-realScrollY}px)` }">
+      <ul :style="{ transform: `translateY(${-scrollY}px)` }">
         <li v-for="(post, pidx) in posts" :key="pidx" class="post" :latest="pidx ? undefined : true">
           <p class="post-date">{{ post.date }}</p>
           <div class="stems">
@@ -26,9 +26,9 @@
         </li>
       </ul>
     </div>
-    <div class="scroll-bar-container" @mousedown="touchBar">
-      <div class="scroll-bar" :hold="scrollElasticity > 0.15 ? true : undefined"></div>
-      <div v-if="sbsc.scrollable" :style="{ transform: `translateY(${scrollBarOffsetY}px)` }" class="scroll-span" />
+    <div class="scroll-bar-container" :disabled="scrollable ? null : true" @mousedown="touchBar">
+      <div class="scroll-bar" :hold="holdBar ? true : null"></div>
+      <div v-if="scrollable" :style="{ transform: `translateY(${scrollBarY}px)` }" class="scroll-span" />
     </div>
     <div class="right-part">
       <img src="@/assets/images/bud.png" alt="bud" />
@@ -39,7 +39,7 @@
 <script lang="ts">
 import { defineComponent, nextTick } from 'vue'
 
-import { debounce, Scrollable, ScrollBarSizeCalculator } from '@/assets/lib'
+import { debounce, ScrollBar, Scrollable } from '@/assets/lib'
 import { Post } from '@/assets/types/post'
 
 const testPosts: Post[] = [
@@ -80,101 +80,71 @@ export default defineComponent({
 
       pageHeight: window.innerHeight + 'px',
 
-      touchY: 0,
       scrollY: 0,
-      realScrollY: 0,
-      scrollElasticity: 0.1,
+      scrollBarY: 0,
 
-      raf: 0,
-
-      scrollBar: null as HTMLElement | null,
-      sbsc: new ScrollBarSizeCalculator(0, 60, 0, 12),
+      scrollBarEl: null as HTMLElement | null,
+      holdBar: false,
       s: undefined as Scrollable | undefined,
+      sb: undefined as ScrollBar | undefined,
+      scrollable: false,
     }
   },
-  computed: {
-    scrollBarOffsetY(): number {
-      return this.sbsc.a2b(this.realScrollY)
-    },
-  },
   mounted() {
+    this.s = new Scrollable(this.$el.querySelector('#post-list') as HTMLElement, {
+      bindEventAt: document.body,
+      overflow: 60,
+      onstart: () => {
+        this.holdBar = true
+      },
+      onscroll: (y) => {
+        this.scrollY = y
+        this.scrollBarY = this.sb!.y
+      },
+      onstable: () => {
+        this.holdBar = false
+      },
+    })
+    this.sb = this.s!.bindScrollBar()
     window.addEventListener('resize', this.updateSize)
     this.updateSize()
-    this.s = new Scrollable(
-      document.body,
-      (dy) => {
-        this.scrollElasticity = 0.3
-        this.scrollY += dy
 
-        // TODO: not grace enough
-        return this.sbsc.a2a(this.scrollY) - this.sbsc.a2a(this.scrollY - dy)
-        // this.scrollY = this.sbsc.a2a(this.scrollY + dy)
-      },
-      () => {
-        this.scrollElasticity *= 0.6
-        this.scrollY = this.sbsc.trim(this.scrollY)
-      }
-    )
-    this.raf = requestAnimationFrame(this.updateWheel)
-
-    this.scrollBar = this.$el.querySelector('.scroll-bar-container') as HTMLElement
+    this.scrollBarEl = this.$el.querySelector('.scroll-bar-container') as HTMLElement
   },
   beforeUnmount() {
     window.removeEventListener('resize', this.updateSize)
-    if (this.s) {
-      this.s.clear()
-    }
-    cancelAnimationFrame(this.raf)
+    this.s!.clear()
   },
   methods: {
     updateSize() {
       this.pageHeight = window.innerHeight + 'px'
 
       nextTick(() => {
-        const list = this.$el.querySelector('#post-list') as HTMLElement
-        this.sbsc.updateSize(list.scrollHeight - list.offsetHeight, list.offsetHeight - 42)
-        this.scrollY = this.sbsc.trim(this.scrollY)
+        const [h] = this.s!.updateSize()
+        this.scrollable = this.s!.scrollable
+        this.sb!.setSize(h - 42, 12)
+        this.scrollBarY = this.sb!.y
       })
-    },
-    checkWheelPos: debounce(function (this: any) {
-      this.scrollElasticity *= 0.6
-      this.scrollY = this.sbsc.trim(this.scrollY)
-    }, 160),
-
-    updateWheel() {
-      const scrollY = this.sbsc.a2a(this.scrollY)
-      const dis = scrollY - this.realScrollY
-      if (Math.abs(dis) > 1) {
-        this.realScrollY += dis * this.scrollElasticity + Math.sign(dis)
-      } else if (dis) {
-        this.realScrollY = scrollY
-      }
-      this.raf = requestAnimationFrame(this.updateWheel)
     },
 
     touchBar(e: MouseEvent) {
-      if (!this.sbsc.scrollable) {
+      if (!this.scrollable) {
         return
       }
-      this.scrollElasticity = 0.2
-      const y = e.pageY - this.scrollBar!.offsetTop - 21
-      this.scrollY = this.sbsc.b2a(y)
+      const y = e.pageY - this.scrollBarEl!.offsetTop - 21
+      this.sb!.setY(y)
 
       document.body.addEventListener('mousemove', this.moveBar)
       document.body.addEventListener('mouseup', this.removeBarEvent)
       document.body.addEventListener('mouseleave', this.removeBarEvent)
     },
     moveBar(e: MouseEvent) {
-      if (!this.sbsc.scrollable) {
-        return
-      }
       e.preventDefault()
-      this.scrollElasticity = 0.2
-      const y = e.pageY - this.scrollBar!.offsetTop - 21
-      this.scrollY = this.sbsc.b2a(y)
+      const y = e.pageY - this.scrollBarEl!.offsetTop - 21
+      this.sb!.setY(y)
     },
     removeBarEvent() {
-      this.checkWheelPos()
+      this.s!.checkOffsetY()
       document.body.removeEventListener('mousemove', this.moveBar)
       document.body.removeEventListener('mouseup', this.removeBarEvent)
       document.body.removeEventListener('mouseleave', this.removeBarEvent)
@@ -270,8 +240,13 @@ export default defineComponent({
   position relative
   overflow hidden
   cursor pointer
+  &[disabled]
+    cursor default
+    .scroll-bar
+      opacity .4 !important
   &:hover .scroll-bar
     opacity 1
+    transition .14s
 .scroll-bar
   margin 0 12px
   width 6px
@@ -279,9 +254,10 @@ export default defineComponent({
   border-radius 3px
   background-color $green
   opacity .4
-  transition opacity .14s
+  transition opacity .8s .14s
   &[hold]
     opacity 1
+    transition .14s
 .scroll-span
   position absolute
   top 6px
