@@ -9,7 +9,7 @@
             <ul>
               <li v-for="(stem, i) in post.stems" :key="i">
                 <i v-if="pidx === 0" class="title-symbol">{{ stem.origin }}</i>
-                <p class="leaf">{{ stem.origin }}</p>
+                <router-link to="/n/1" class="leaf">{{ stem.origin }}</router-link>
                 <p class="content">{{ stem.body }}</p>
               </li>
             </ul>
@@ -19,7 +19,7 @@
             <ul>
               <li v-for="(leaf, i) in post.leaves" :key="i">
                 <i v-if="pidx === 0" class="title-symbol">{{ leaf }}</i>
-                <p class="leaf">{{ leaf }}</p>
+                <router-link to="/n/1" class="leaf">{{ leaf }}</router-link>
               </li>
             </ul>
           </div>
@@ -39,7 +39,7 @@
 <script lang="ts">
 import { defineComponent, nextTick } from 'vue'
 
-import { debounce, ScrollBar, Scrollable } from '@/assets/lib'
+import { ScrollBar, Scrollable } from '@/assets/lib'
 import { Post } from '@/assets/types/post'
 
 const testPosts: Post[] = [
@@ -115,10 +115,13 @@ export default defineComponent({
     window.removeEventListener('resize', this.updateSize)
     this.s!.clear()
   },
+  beforeRouteLeave(to, from, next) {
+    this.$emit('leave', next)
+  },
   methods: {
     updateSize() {
-      this.pageHeight = window.innerHeight + 'px'
-
+      // this.pageHeight = window.innerHeight + 'px'
+      this.pageHeight = '100%'
       nextTick(() => {
         const [h] = this.s!.updateSize()
         this.scrollable = this.s!.scrollable
@@ -180,6 +183,7 @@ export default defineComponent({
     color $red
     opacity .6
   .leaf
+    display block
     font-size 18px
     margin-bottom 16px
     position relative

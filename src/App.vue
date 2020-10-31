@@ -1,12 +1,23 @@
 <template>
-  <router-view></router-view>
+  <div>
+    <div id="container">
+      <router-view @leave="beforePageLeave"></router-view>
+    </div>
+    <div id="animation"></div>
+  </div>
 </template>
 
 <script lang="ts">
 import { defineComponent } from 'vue'
+import { NavigationGuardNext } from 'vue-router'
 
 export default defineComponent({
   name: 'App',
+  methods: {
+    beforePageLeave(next: NavigationGuardNext) {
+      next()
+    },
+  },
 })
 </script>
 
@@ -27,6 +38,16 @@ body, ul, p
   padding 0
 ul
   list-style none
+a
+  color inherit
+
+#container
+  position fixed
+  top 0
+  left 0
+  width 100%
+  height 100%
+  overflow hidden
 
 @font-face
   font-family 'Quicksand'

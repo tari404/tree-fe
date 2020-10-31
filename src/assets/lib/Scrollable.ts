@@ -95,7 +95,7 @@ export class Scrollable {
       this.lastFrame = timer
 
       if (this.v) {
-        const fa = -0.0007 * Math.sign(this.v)
+        const fa = -0.0005 * Math.sign(this.v)
         const aa = -0.001 * Math.sign(this.v) * this.v ** 2
         const a = fa + aa
         const dy = this.v * dt + dt ** 2 * a
@@ -147,8 +147,7 @@ export class Scrollable {
       if (!self.shakable && !self.scrollable) {
         return
       }
-      e.preventDefault()
-      self.scrollElasticity = 0.2
+      self.scrollElasticity = 0.5
       v = 0
       self.v = 0
 
