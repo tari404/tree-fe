@@ -40,7 +40,7 @@
 import { defineComponent, nextTick } from 'vue'
 
 import { ScrollBar, Scrollable } from '@/assets/lib'
-import { Post } from '@/assets/types/post'
+import { Post } from '@/assets/types'
 
 const testPosts: Post[] = [
   {
@@ -116,7 +116,17 @@ export default defineComponent({
     this.s!.clear()
   },
   beforeRouteLeave(to, from, next) {
-    this.$emit('leave', next)
+    const scrollBar = this.scrollBarEl!.querySelector('.scroll-bar') as HTMLElement
+    const rect = scrollBar.getBoundingClientRect()
+    this.$emit('leave', next, [
+      {
+        type: 'scroll-bar',
+        x: rect.x,
+        y: rect.y,
+        width: rect.width,
+        height: rect.height,
+      },
+    ])
   },
   methods: {
     updateSize() {
