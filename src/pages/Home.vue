@@ -1,5 +1,5 @@
 <template>
-  <div id="home" :style="{ height: pageHeight }">
+  <div id="home">
     <div id="post-list">
       <ul :style="{ transform: `translateY(${-scrollY}px)` }">
         <li v-for="(post, pidx) in posts" :key="pidx" class="post" :latest="pidx ? undefined : true">
@@ -37,7 +37,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, nextTick } from 'vue'
+import { defineComponent } from 'vue'
 
 import { ScrollBar, Scrollable } from '@/assets/lib'
 import { Post } from '@/assets/types'
@@ -78,8 +78,6 @@ export default defineComponent({
     return {
       posts: testPosts,
 
-      pageHeight: window.innerHeight + 'px',
-
       scrollY: 0,
       scrollBarY: 0,
 
@@ -106,13 +104,17 @@ export default defineComponent({
       },
     })
     this.sb = this.s!.bindScrollBar()
-    window.addEventListener('resize', this.updateSize)
-    this.updateSize()
 
     this.scrollBarEl = this.$el.querySelector('.scroll-bar-container') as HTMLElement
   },
-  beforeUnmount() {
+  activated() {
+    window.addEventListener('resize', this.updateSize)
+    this.updateSize()
+  },
+  deactivated() {
     window.removeEventListener('resize', this.updateSize)
+  },
+  beforeUnmount() {
     this.s!.clear()
   },
   beforeRouteLeave(to, from, next) {
@@ -120,14 +122,10 @@ export default defineComponent({
   },
   methods: {
     updateSize() {
-      // this.pageHeight = window.innerHeight + 'px'
-      this.pageHeight = '100%'
-      nextTick(() => {
-        const [h] = this.s!.updateSize()
-        this.scrollable = this.s!.scrollable
-        this.sb!.setSize(h - 42, 12)
-        this.scrollBarY = this.sb!.y
-      })
+      const [h] = this.s!.updateSize()
+      this.scrollable = this.s!.scrollable
+      this.sb!.setSize(h - 42, 12)
+      this.scrollBarY = this.sb!.y
     },
 
     touchBar(e: MouseEvent) {
@@ -163,7 +161,7 @@ export default defineComponent({
   margin auto
   padding 8vh 0
   max-width 1400px
-  height 100vh
+  height 100%
 
   display flex
 

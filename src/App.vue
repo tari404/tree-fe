@@ -1,7 +1,11 @@
 <template>
   <div>
     <div id="container">
-      <router-view @leave="beforePageLeave"></router-view>
+      <router-view @leave="beforePageLeave" v-slot="{ Component }">
+        <keep-alive include="Home">
+          <component :is="Component" />
+        </keep-alive>
+      </router-view>
     </div>
     <div id="animation"></div>
   </div>

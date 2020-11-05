@@ -3,8 +3,10 @@
     <div class="node-menu">
       <router-link to="/">返回</router-link>
     </div>
-    <div class="node-content">
-      <div class="markdown" v-html="bodyHTML"></div>
+    <div id="node-body" class="node-content">
+      <div :style="{ transform: `translateY(${-scrollY}px)` }">
+        <div class="markdown" v-html="bodyHTML"></div>
+      </div>
     </div>
   </div>
 </template>
@@ -13,7 +15,7 @@
 import { defineComponent } from 'vue'
 import marked from 'marked'
 
-window.marked = marked
+import { Scrollable } from '@/assets/lib'
 
 const testNode = {
   body: `在混用了CDN和modules来进行\`three.js\`(lib)的开发时，出现了从modules里引入的\`RawShaderMaterial\`可用，但是从CDN里引入的\`RawShaderMaterial\`工作不正常的问题。
@@ -31,6 +33,9 @@ export default defineComponent({
     return {
       id: this.$route.params.id as string,
       node: testNode,
+
+      scrollY: 0,
+      s: undefined as Scrollable | undefined,
     }
   },
   computed: {
@@ -38,8 +43,29 @@ export default defineComponent({
       return marked(this.node.body)
     },
   },
+  mounted() {
+    this.s = new Scrollable(this.$el.querySelector('#node-body') as HTMLElement, {
+      bindEventAt: document.body,
+      overflow: 0,
+      onscroll: (y) => {
+        this.scrollY = y
+      },
+    })
+    window.addEventListener('resize', this.updateSize)
+    this.updateSize()
+  },
+  beforeUnmount() {
+    window.removeEventListener('resize', this.updateSize)
+    this.s!.clear()
+  },
   beforeRouteLeave(to, from, next) {
     this.$emit('leave', to, from, next)
+  },
+
+  methods: {
+    updateSize() {
+      this.s!.updateSize()
+    },
   },
 })
 </script>
@@ -47,18 +73,15 @@ export default defineComponent({
 <style lang="stylus" scoped>
 @import '~@/color.styl'
 
-$dev = 0
-
 #node
   margin auto
   padding 8vh 0
   max-width 1400px
   height 100vh
   display flex
-  background-color rgba(green, $dev)
 
 .node-menu
-  padding 0 30px
+  padding 10px 30px
   flex 0 0 200px
   background-color $green - 30%
   color $white
@@ -77,12 +100,12 @@ $dev = 0
   flex 1 1 auto
   display flex
   justify-content center
-  background-color rgba(yellow, $dev)
   animation move-up .5s forwards
+  overflow hidden
   >div
     padding 0 20px
     max-width 760px
-    background-color rgba(green, $dev)
+    height fit-content
 
 @keyframes move-up
   from
@@ -91,6 +114,8 @@ $dev = 0
     transform translateY(0)
 
 @media screen and (max-width 800px)
+  #node
+    padding 0
   .node-menu
     flex 0 0 100px
 </style>
