@@ -116,17 +116,7 @@ export default defineComponent({
     this.s!.clear()
   },
   beforeRouteLeave(to, from, next) {
-    const scrollBar = this.scrollBarEl!.querySelector('.scroll-bar') as HTMLElement
-    const rect = scrollBar.getBoundingClientRect()
-    this.$emit('leave', next, [
-      {
-        type: 'scroll-bar',
-        x: rect.x,
-        y: rect.y,
-        width: rect.width,
-        height: rect.height,
-      },
-    ])
+    this.$emit('leave', to, from, next)
   },
   methods: {
     updateSize() {
@@ -190,6 +180,7 @@ export default defineComponent({
     font-family 'Quicksand'
     font-weight 600
     font-size 36px
+    line-height 1.25em
     color $red
     opacity .6
   .leaf

@@ -8,57 +8,53 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue'
-import { NavigationGuardNext } from 'vue-router'
+import { defineComponent, nextTick } from 'vue'
+import { RouteLocationNormalized, NavigationGuardNext } from 'vue-router'
 import { TransitionElement } from '@/assets/types'
+import { defaultOut, defaultIn, transitonLib } from '@/assets/transitions'
 
 export default defineComponent({
   name: 'App',
   data() {
     return {
-      container: null as HTMLElement | null,
+      contentLayer: null as HTMLElement | null,
       animationLayer: null as HTMLElement | null,
     }
   },
   mounted() {
-    this.container = this.$el.querySelector('#container') as HTMLElement
+    this.contentLayer = this.$el.querySelector('#container') as HTMLElement
     this.animationLayer = this.$el.querySelector('#animation') as HTMLElement
   },
   methods: {
-    beforePageLeave(next: NavigationGuardNext, transElements: TransitionElement[] = []) {
-      const c = this.container!
-      const al = this.animationLayer!
-      al.style.zIndex = '0'
-      al.style.opacity = '1'
-      for (const item of transElements) {
-        const el = document.createElement('div')
-        el.className = item.type
-        el.style.left = item.x + 'px'
-        el.style.top = item.y + 'px'
-        el.style.width = item.width + 'px'
-        el.style.height = item.height + 'px'
-        al.appendChild(el)
+    async beforePageLeave(to: RouteLocationNormalized, from: RouteLocationNormalized, next: NavigationGuardNext) {
+      const cL = this.contentLayer!
+      const aL = this.animationLayer!
+
+      let transOut = defaultOut
+      let transIn = defaultIn
+
+      const tag = from.name?.toString() + '-' + to.name?.toString()
+      const action = transitonLib[tag]
+      if (action) {
+        transOut = action.out
+        transIn = action.in
       }
-      al.style.transition = 'opacity .1s'
-      if (transElements.length) {
-        c.style.transition = 'transform .1s'
-        c.style.transform = 'scale(.9)'
-      }
-      al.ontransitionend = () => {
-        al.style.transition = 'opacity .2s'
-        c.style.transition = ''
-        c.style.transform = 'scale(1)'
-        next()
-        setTimeout(() => {
-          al.style.opacity = '0'
-          al.ontransitionend = () => {
-            al.style.transition = ''
-            al.innerHTML = ''
-            al.style.zIndex = '-1'
-            al.ontransitionend = null
-          }
-        }, 400)
-      }
+
+      aL.style.zIndex = '0'
+      await transOut({
+        contentLayer: cL,
+        animLayer: aL,
+      })
+
+      // TODO: preload
+
+      next()
+
+      await transIn({
+        contentLayer: cL,
+        animLayer: aL,
+      })
+      aL.style.zIndex = '-1'
     },
   },
 })
@@ -94,25 +90,12 @@ a
   overflow hidden
 
 #animation
-  background-color $white
+  background-color transparent
   opacity 0
   z-index -1
-  .scroll-bar
-    position absolute
-    border-radius 3px
-    background-color $green
-    animation scroll-bar .5s ease .02s forwards
 
-@keyframes scroll-bar
-  30%
-    transform scale(0.5, 1.3)
-    background-color $green - 30%
-  40%
-    transform scale(0.5, 1.3)
-    background-color $green - 30%
-  100%
-    transform translateX(-436px) scale(0.5, 2)
-    background-color $green - 30%
+.transition-item
+  position absolute
 
 @font-face
   font-family 'Quicksand'

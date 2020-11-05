@@ -39,7 +39,7 @@ export default defineComponent({
     },
   },
   beforeRouteLeave(to, from, next) {
-    this.$emit('leave', next)
+    this.$emit('leave', to, from, next)
   },
 })
 </script>
@@ -78,7 +78,19 @@ $dev = 0
   display flex
   justify-content center
   background-color rgba(yellow, $dev)
+  animation move-up .5s forwards
   >div
-    max-width 740px
+    padding 0 20px
+    max-width 760px
     background-color rgba(green, $dev)
+
+@keyframes move-up
+  from
+    transform translateY(20px)
+  to
+    transform translateY(0)
+
+@media screen and (max-width 800px)
+  .node-menu
+    flex 0 0 100px
 </style>
