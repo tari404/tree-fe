@@ -12,7 +12,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue'
+import { defineComponent, nextTick } from 'vue'
 import marked from 'marked'
 
 import { Scrollable } from '@/assets/lib'
@@ -44,7 +44,17 @@ export default defineComponent({
     },
   },
   mounted() {
-    this.s = new Scrollable(this.$el.querySelector('#node-body') as HTMLElement, {
+    const node = this.$el.querySelector('#node-body') as HTMLElement
+    node.style.transform = 'translateY(20px)'
+    nextTick(() => {
+      node.style.transition = 'transform .5s'
+      node.style.transform = ''
+      node.ontransitionend = () => {
+        node.style.transition = ''
+        node.ontransitionend = null
+      }
+    })
+    this.s = new Scrollable(node, {
       bindEventAt: document.body,
       overflow: 0,
       onscroll: (y) => {
@@ -100,7 +110,7 @@ export default defineComponent({
   flex 1 1 auto
   display flex
   justify-content center
-  animation move-up .5s forwards
+  // animation move-up .5s forwards
   overflow hidden
   >div
     padding 0 20px
