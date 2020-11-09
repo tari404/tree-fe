@@ -13,7 +13,7 @@ const isProd = process.env.NODE_ENV !== 'development'
 
 module.exports = {
   mode: isProd ? 'production' : 'development',
-  // devtool: isProd ? 'source-map' : 'eval-cheap-source-map',
+  devtool: isProd ? 'source-map' : 'eval-cheap-source-map',
   output: {
     path: path.resolve(__dirname, '../dist'),
     publicPath: '/dist/',
@@ -26,6 +26,7 @@ module.exports = {
     },
     extensions: ['.vue', '.ts', '.js'],
   },
+  stats: false,
   module: {
     noParse: /es6-promise\.js$/, // avoid webpack shimming process
     rules: [
@@ -121,6 +122,7 @@ module.exports = {
         parallel: true,
       }),
     ],
+    usedExports: false,
   },
   plugins: [
     new VueLoaderPlugin(),

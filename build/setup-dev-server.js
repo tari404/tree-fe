@@ -3,8 +3,8 @@
 /* */
 
 const path = require('path')
-const MFS = require('memory-fs')
 const webpack = require('webpack')
+const chalk = require('chalk')
 const clientConfig = require('./webpack.client.config')
 const serverConfig = require('./webpack.server.config')
 
@@ -32,6 +32,8 @@ module.exports = function setupDevServer(app, cb) {
   clientConfig.plugins.push(new webpack.HotModuleReplacementPlugin())
 
   const clientCompiler = webpack(clientConfig)
+  // prevent webpack-dev-middleware log
+  clientCompiler.infrastructureLogger = () => {}
   const devMiddleware = require('webpack-dev-middleware')(clientCompiler, {
     publicPath: '/dist/',
   })
@@ -43,22 +45,22 @@ module.exports = function setupDevServer(app, cb) {
     stats.errors.forEach((err) => console.error(err))
     stats.warnings.forEach((err) => console.warn(err))
     if (stats.errors.length) return
-    const file = readFile(clientCompiler.outputFileSystem, 'vue-ssr-client-manifest.json')
-    clientManifest = JSON.parse(file)
+    console.log(chalk.green('● Client Manifest updated!'))
+
+    clientManifest = JSON.parse(readFile(clientCompiler.outputFileSystem, 'vue-ssr-client-manifest.json'))
     update()
   })
 
   app.use(require('webpack-hot-middleware')(clientCompiler, { heartbeat: 5000 }))
 
   const serverCompiler = webpack(serverConfig)
-  const mfs = new MFS()
-  serverCompiler.outputFileSystem = mfs
   serverCompiler.watch({}, (err, stats) => {
     if (err) throw err
     stats = stats.toJson()
     if (stats.errors.length) return
+    console.log(chalk.cyan('● Server Budle updated!'))
 
-    bundle = JSON.parse(readFile(mfs, 'vue-ssr-server-bundle.json'))
+    bundle = JSON.parse(readFile(serverCompiler.outputFileSystem, 'vue-ssr-server-bundle.json'))
     update()
   })
 

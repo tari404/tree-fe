@@ -1,3 +1,8 @@
+export interface SSRContext {
+  url: string
+  state: any
+}
+
 export interface Post {
   date: string
   stems: { origin: string; body: string }[]
