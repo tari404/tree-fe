@@ -26,7 +26,7 @@ module.exports = {
     },
     extensions: ['.vue', '.ts', '.js'],
   },
-  stats: false,
+  stats: isProd,
   module: {
     noParse: /es6-promise\.js$/, // avoid webpack shimming process
     rules: [

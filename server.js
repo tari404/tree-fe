@@ -5,12 +5,13 @@ const fs = require('fs'),
 const express = require('express')
 const favicon = require('serve-favicon')
 
-app = express()
+const app = express()
 
 const serialize = require('serialize-javascript')
 const { createBundleRenderer } = require('vue-bundle-renderer')
+const chalk = require('chalk')
 
-const isProd = process.env.NODE_ENV === 'production'
+const isProd = process.env.NODE_ENV !== 'development'
 
 function createRenderer(bundle, options) {
   return createBundleRenderer(
@@ -48,8 +49,12 @@ app.use('/static', serve('./static', true))
 
 async function render(req, res) {
   const handleError = (err) => {
-    res.status(500).send('500 | Internal Server Error')
-    console.error(`error during render : ${req.url}`)
+    if (err.code && typeof err.code === 'number') {
+      res.sendStatus(err.code)
+    } else {
+      res.sendStatus(500)
+    }
+    console.error(chalk.red(`Error during render: ${req.url}`))
     console.error(err)
   }
 
@@ -69,35 +74,36 @@ async function render(req, res) {
     url: req.url,
   }
 
-  let page
-  try {
-    page = await renderer.renderToString(context)
-  } catch (err) {
+  const page = await renderer.renderToString(context).catch((err) => {
     handleError(err)
+    return ''
+  })
+  if (!page) {
+    return
   }
+
   let { renderStyles, renderResourceHints, renderScripts } = context
 
   // TODO: Use loadash template
   const html = `
-        <!DOCTYPE html>
-            <html lang="en">
-              <head>
-              <meta charset="UTF-8">
-              <meta http-equiv="X-UA-Compatible" content="IE=edge">
-              <meta name="viewport" content="width=500,user-scalable=no">
-              <link rel="icon" type="image/x-icon" href="/favicon.ico">
-              <title>Tree</title>
-              <link href="https://cdn.jsdelivr.net/npm/remixicon@2.5.0/fonts/remixicon.css" rel="stylesheet">
-              ${renderResourceHints()}
-              ${renderStyles()}
-              </head>
-              <body>
-                <div id="app">${page}</div>
-                ${renderScripts()}
-                ${renderState(context)}
-                </body>
-            </html>
-        `
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=500,user-scalable=no">
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <title>Tree</title>
+  <link href="https://cdn.jsdelivr.net/npm/remixicon@2.5.0/fonts/remixicon.css" rel="stylesheet">
+  ${renderResourceHints()}
+  ${renderStyles()}
+  </head>
+  <body>
+    <div id="app">${page}</div>
+    ${renderScripts()}
+    ${renderState(context)}
+  </body>
+</html>`
 
   // print page to file for inspection
   if (!isProd) {

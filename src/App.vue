@@ -10,11 +10,14 @@
 <script lang="ts">
 import { defineComponent, nextTick } from 'vue'
 import { RouteLocationNormalized, NavigationGuardNext } from 'vue-router'
-import { TransitionElement } from '@/assets/types'
 import { defaultOut, defaultIn, transitonLib } from '@/assets/transitions'
 
 export default defineComponent({
   name: 'App',
+  async serverPrefetch() {
+    const pageName = this.$route.name as string
+    return this.$store.dispatch('PRELOAD_PAGE_' + pageName.toUpperCase())
+  },
   data() {
     return {
       contentLayer: null as HTMLElement | null,
@@ -46,7 +49,7 @@ export default defineComponent({
         animLayer: aL,
       })
 
-      // TODO: preload
+      await this.$store.dispatch('PRELOAD_PAGE_' + to.name?.toString().toUpperCase())
 
       next()
 

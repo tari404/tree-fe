@@ -1,23 +1,25 @@
-import { createSSRApp } from 'vue'
-import { createRouter, createMemoryHistory } from 'vue-router'
-import App from './App.vue'
-import { SSRContext } from './assets/types'
-import routes from './routes'
+import createApp from './main'
+import { State } from './store'
+
+export interface SSRContext {
+  url: string
+  state: State
+}
 
 export default async (ssrContext: SSRContext) => {
-  const app = createSSRApp(App)
-  const router = createRouter({
-    history: createMemoryHistory(),
-    routes,
-  })
-  app.use(router)
+  const { app, router, store } = createApp()
   const { url } = ssrContext
 
   router.push(url)
 
   await router.isReady()
 
-  ssrContext.state = { hello: 'world' }
+  const matched = router.currentRoute.value.matched
+  if (!matched.length) {
+    throw { code: 404 }
+  }
+
+  ssrContext.state = store.state
 
   return app
 }

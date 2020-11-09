@@ -1,23 +1,17 @@
-import { createSSRApp } from 'vue'
-import { createRouter, createWebHistory } from 'vue-router'
-import App from './App.vue'
-import { SSRContext } from './assets/types'
-import routes from './routes'
+import createApp from './main'
 
-export type Context = Window & { __INITIAL_STATE__?: SSRContext }
+const { app, router, store } = createApp()
 
-const w = (window as any) as Context
-if (w.__INITIAL_STATE__) {
-  console.log(w.__INITIAL_STATE__)
+if (window.__INITIAL_STATE__) {
+  store.replaceState(window.__INITIAL_STATE__)
+  window.__INITIAL_STATE__ = undefined
+
+  // to skip page transition animation
+  setTimeout(() => {
+    window.__INITIALIZED__ = true
+  }, 500)
 }
 
-const app = createSSRApp(App)
-const router = createRouter({
-  history: createWebHistory(),
-  routes,
+router.isReady().then(() => {
+  app.mount('#app', true)
 })
-app.use(router)
-;(async (r, a) => {
-  await r.isReady()
-  a.mount('#app', true)
-})(router, app)
