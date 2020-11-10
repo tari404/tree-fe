@@ -1,7 +1,7 @@
 <template>
   <div>
     <div id="container">
-      <router-view @leave="beforePageLeave"></router-view>
+      <router-view></router-view>
     </div>
     <div id="animation"></div>
   </div>
@@ -16,7 +16,10 @@ export default defineComponent({
   name: 'App',
   async serverPrefetch() {
     const pageName = this.$route.name as string
-    return this.$store.dispatch('PRELOAD_PAGE_' + pageName.toUpperCase())
+    const action = 'PRELOAD_PAGE_' + pageName.toUpperCase()
+    if (this.$store._actions[action]) {
+      await this.$store.dispatch(action)
+    }
   },
   data() {
     return {
@@ -27,20 +30,25 @@ export default defineComponent({
   mounted() {
     this.contentLayer = this.$el.querySelector('#container') as HTMLElement
     this.animationLayer = this.$el.querySelector('#animation') as HTMLElement
+    this.$router.beforeEach(this.beforePageLeave)
+    this.$router.afterEach(this.afterPageLeave)
   },
   methods: {
+    getPagesNames(to: RouteLocationNormalized, from: RouteLocationNormalized): [string, string] {
+      return [(to.name || '').toString(), (from.name || '').toString()]
+    },
     async beforePageLeave(to: RouteLocationNormalized, from: RouteLocationNormalized, next: NavigationGuardNext) {
       const cL = this.contentLayer!
       const aL = this.animationLayer!
 
       let transOut = defaultOut
-      let transIn = defaultIn
 
-      const tag = from.name?.toString() + '-' + to.name?.toString()
-      const action = transitonLib[tag]
-      if (action) {
-        transOut = action.out
-        transIn = action.in
+      const [t, f] = this.getPagesNames(to, from)
+      const path = f + '-' + t
+      if (transitonLib[path]) {
+        transOut = transitonLib[path]!.out
+      } else if (transitonLib[f]) {
+        transOut = transitonLib[f]!.out
       }
 
       aL.style.zIndex = '0'
@@ -49,9 +57,26 @@ export default defineComponent({
         animLayer: aL,
       })
 
-      await this.$store.dispatch('PRELOAD_PAGE_' + to.name?.toString().toUpperCase())
+      const action = 'PRELOAD_PAGE_' + t.toUpperCase()
+      if (this.$store._actions[action]) {
+        await this.$store.dispatch(action)
+      }
 
       next()
+    },
+    async afterPageLeave(to: RouteLocationNormalized, from: RouteLocationNormalized) {
+      const cL = this.contentLayer!
+      const aL = this.animationLayer!
+
+      let transIn = defaultIn
+
+      const [t, f] = this.getPagesNames(to, from)
+      const path = f + '-' + t
+      if (transitonLib[path]) {
+        transIn = transitonLib[path]!.in
+      } else if (transitonLib[t]) {
+        transIn = transitonLib[t]!.in
+      }
 
       await transIn({
         contentLayer: cL,
@@ -100,6 +125,10 @@ a
 .transition-item
   position absolute
 
+@font-face
+  font-family 'Quicksand'
+  src url('~@/assets/font/Quicksand-Light.ttf')
+  font-weight 200
 @font-face
   font-family 'Quicksand'
   src url('~@/assets/font/Quicksand-SemiBold.ttf')

@@ -34,12 +34,19 @@ for (let i = 0; i < 2; i++) {
 export interface State {
   posts: Post[]
   node?: Node
+
+  memoryStore: {
+    homePageScrollY: number
+  }
 }
 
 const state = () => {
   const s: State = {
     posts: [],
     node: undefined,
+    memoryStore: {
+      homePageScrollY: 0,
+    },
   }
   return s
 }
@@ -48,13 +55,17 @@ export default function () {
   return createStore({
     state,
     getters: {},
-    mutations: {},
+    mutations: {
+      STORE_HOMEPAGE_SCROLLY(state, y: number) {
+        state.memoryStore.homePageScrollY = y
+      },
+    },
     actions: {
       async PRELOAD_PAGE_HOME({ state }) {
         const posts = await new Promise((r: (p: Post[]) => void) => {
           setTimeout(() => {
             r(testPosts)
-          }, Math.random() * 200 + 100)
+          }, Math.random() * 0 + 0)
         })
         state.posts = posts
       },
@@ -62,7 +73,7 @@ export default function () {
         const node = await new Promise((r: (p: Node) => void) => {
           setTimeout(() => {
             r(testPosts[0].stems[0])
-          }, Math.random() * 200 + 100)
+          }, Math.random() * 0 + 0)
         })
         state.node = node
       },

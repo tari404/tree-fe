@@ -3,6 +3,8 @@ import { State } from '.'
 
 declare module '@vue/runtime-core' {
   export interface ComponentCustomProperties {
-    $store: Store<State>
+    $store: Store<State> & {
+      _actions: { [key: string]: Function }
+    }
   }
 }

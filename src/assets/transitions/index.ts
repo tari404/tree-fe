@@ -1,6 +1,7 @@
 import { Ruler } from '@/assets/lib'
 
 import home2node from './home2node'
+import errorpage from './errorpage'
 
 export interface transitionInput {
   contentLayer: HTMLElement
@@ -59,4 +60,5 @@ export const defaultIn = (input: transitionInput) => {
 
 export const transitonLib = {
   'Home-Node': home2node(r),
+  ErrorPage: errorpage(r),
 } as transitionLib

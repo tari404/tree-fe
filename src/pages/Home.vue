@@ -31,7 +31,9 @@
       <div v-if="scrollable" :style="{ transform: `translateY(${scrollBarY}px)` }" class="scroll-span" />
     </div>
     <div class="right-part">
-      <img src="@/assets/images/bud.png" alt="bud" />
+      <router-link to="/about">
+        <img src="@/assets/images/bud.png" alt="bud" />
+      </router-link>
     </div>
   </div>
 </template>
@@ -40,8 +42,6 @@
 import { defineComponent } from 'vue'
 
 import { ScrollBar, Scrollable } from '@/assets/lib'
-import { Post } from '@/types'
-import { State } from '@/store'
 
 export default defineComponent({
   name: 'Home',
@@ -65,6 +65,7 @@ export default defineComponent({
   mounted() {
     this.s = new Scrollable(this.$el.querySelector('#post-list') as HTMLElement, {
       bindEventAt: document.body,
+      scrollY: this.$store.state.memoryStore.homePageScrollY,
       overflow: 60,
       onstart: () => {
         this.holdBar = true
@@ -85,11 +86,9 @@ export default defineComponent({
     this.updateSize()
   },
   beforeUnmount() {
+    this.$store.commit('STORE_HOMEPAGE_SCROLLY', this.scrollY)
     window.removeEventListener('resize', this.updateSize)
     this.s!.clear()
-  },
-  beforeRouteLeave(to, from, next) {
-    this.$emit('leave', to, from, next)
   },
   methods: {
     updateSize() {

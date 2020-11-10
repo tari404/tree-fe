@@ -5,6 +5,7 @@ interface ScrollBarOptions {
 
 interface ScrollableOptions {
   bindEventAt?: HTMLElement
+  scrollY?: number
   overflow?: number
   onstart?: () => any
   onscroll: (y: number) => any
@@ -81,7 +82,7 @@ export class Scrollable {
 
   private shakable = true
 
-  private stableTimer = 0
+  private stableTimer?: ReturnType<typeof setTimeout>
   private raf = 0
   private lastFrame = 0
   private running = false
@@ -89,6 +90,11 @@ export class Scrollable {
   constructor(target: HTMLElement, options: ScrollableOptions) {
     this.el = target
     this.bindAt = options.bindEventAt || target
+
+    if (options.scrollY) {
+      this.y = options.scrollY
+      this.targetY = options.scrollY
+    }
 
     this.update = (timer: number) => {
       const dt = this.lastFrame ? timer - this.lastFrame : 16
@@ -164,7 +170,7 @@ export class Scrollable {
       self.scrollElasticity = 0.2
       self.targetY += e.deltaY
       self.run()
-      clearTimeout(self.stableTimer)
+      clearTimeout(self.stableTimer!)
       self.stableTimer = setTimeout(() => {
         self.checkOffsetY()
       }, 160)
@@ -172,8 +178,6 @@ export class Scrollable {
 
     this.bindAt.addEventListener('touchstart', this.onTouch, { passive: false })
     this.bindAt.addEventListener('wheel', this.onWheel)
-
-    this.updateSize()
 
     this.overflow = options.overflow || 0
     if (typeof options.shakable !== 'undefined') {
@@ -192,8 +196,8 @@ export class Scrollable {
     this.effectiveScrollH = Math.max(0, this.el.scrollHeight - this.el.offsetHeight)
     if (this.y > this.effectiveScrollH) {
       this.y = this.effectiveScrollH
-      this.onscroll(this.y)
     }
+    this.onscroll(this.y)
     return [this.el.offsetHeight, this.el.scrollHeight]
   }
 
@@ -235,7 +239,7 @@ export class Scrollable {
 
     this.bindAt.removeEventListener('wheel', this.onWheel)
 
-    clearTimeout(this.stableTimer)
+    clearTimeout(this.stableTimer!)
 
     cancelAnimationFrame(this.raf)
   }

@@ -54,10 +54,6 @@ export default defineComponent({
     window.removeEventListener('resize', this.updateSize)
     this.s!.clear()
   },
-  beforeRouteLeave(to, from, next) {
-    this.$emit('leave', to, from, next)
-  },
-
   methods: {
     updateSize() {
       this.s!.updateSize()
@@ -79,7 +75,7 @@ export default defineComponent({
 .node-menu
   padding 10px 30px
   flex 0 0 200px
-  background-color $green - 30%
+  background-color $midGreen
   color $white
   position relative
   &:before
@@ -89,7 +85,7 @@ export default defineComponent({
     top -8vh
     width 100vw
     height 100vh
-    background-color $green - 30%
+    background-color $midGreen
     z-index -1
 
 .node-content
