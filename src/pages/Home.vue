@@ -32,7 +32,7 @@
     </div>
     <div class="right-part">
       <router-link to="/about">
-        <img src="@/assets/images/bud.png" alt="bud" />
+        <img :src="require('@/assets/images/bud.png')" alt="bud" />
       </router-link>
     </div>
   </div>
