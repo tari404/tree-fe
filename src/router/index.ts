@@ -3,6 +3,7 @@ import { createRouter, createMemoryHistory, createWebHistory } from 'vue-router'
 import ErrorPage from '@/pages/ErrorPage.vue'
 import Home from '@/pages/Home.vue'
 import Node from '@/pages/Node.vue'
+import Publish from '@/pages/Publish.vue'
 
 const isServer = typeof window === 'undefined'
 
@@ -18,6 +19,11 @@ const routes = [
     path: '/n/:id',
     name: 'Node',
     component: Node,
+  },
+  {
+    path: '/p',
+    name: 'Publish',
+    component: Publish,
   },
   {
     path: '/:pathMatch(.*)*',

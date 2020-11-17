@@ -31,9 +31,10 @@
       <div v-if="scrollable" :style="{ transform: `translateY(${scrollBarY}px)` }" class="scroll-span" />
     </div>
     <div class="right-part">
-      <router-link to="/about">
-        <img :src="require('@/assets/images/bud.png')" alt="bud" />
-      </router-link>
+      <div class="home-menus">
+        <router-link to="/p" class="post-button"></router-link>
+      </div>
+      <img src="@/assets/images/bud.png" alt="bud" />
     </div>
   </div>
 </template>
@@ -198,9 +199,9 @@ export default defineComponent({
       color $white
       font-size 40px
   .stems .chapter-symbol:before
-      content '\eea2'
-  .leaves .chapter-symbol:before
       content '\f0d4'
+  .leaves .chapter-symbol:before
+      content '\eea2'
   .leaf
     margin-top 22px
     padding 3px 16px
@@ -276,6 +277,35 @@ export default defineComponent({
   justify-content center
   align-items center
   opacity .8
+  position relative
+.home-menus
+  position absolute
+  top 10px
+  right 10px
+.post-button
+  width 40px
+  height 40px
+  display block
+  border-radius 50%
+  // border solid $deepGreen 4px
+  background-color $green
+  cursor pointer
+  opacity .8
+  transition opacity .2s
+  &:before, &:after
+    content ''
+    position absolute
+    top 50%
+    left 50%
+    width 26px
+    height 6px
+    border-radius 3px
+    background-color $green + 80%
+    transform translate3d(-50%, -50%, 0)
+  &:after
+    transform translate3d(-50%, -50%, 0) rotate(90deg)
+  &:hover
+    opacity 1
 
 @media screen and (max-width 800px)
   #home

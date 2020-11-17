@@ -144,6 +144,8 @@ a
   color $midGray
   p
     margin 1em 0
+    &:first-child
+      margin-top 0
   code
     color #e65100
     padding 4px 6px
