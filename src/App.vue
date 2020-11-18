@@ -131,12 +131,16 @@ a
   font-weight 200
 @font-face
   font-family 'Quicksand'
-  src url('~@/assets/font/Quicksand-SemiBold.ttf')
+  src url('~@/assets/font/Quicksand-Medium.ttf')
   font-weight 400
 @font-face
   font-family 'Quicksand'
-  src url('~@/assets/font/Quicksand-Bold.ttf')
+  src url('~@/assets/font/Quicksand-SemiBold.ttf')
   font-weight 600
+@font-face
+  font-family 'Quicksand'
+  src url('~@/assets/font/Quicksand-Bold.ttf')
+  font-weight 900
 
 .markdown
   font-size 16px
@@ -155,4 +159,42 @@ a
     border-radius 6px
   code[tag=lib]
     color #0288d1
+
+.prime-input
+  padding 7px 19px
+  border-radius 6px
+  border solid 1px $gray
+  font-family inherit
+  color $midGray
+  line-height 24px
+  transition border-color .2s, box-shadow .2s
+  outline none
+  &:focus
+    border-color $orange
+    box-shadow 0 0 4px $orange
+
+.tree-button-add
+  width 40px
+  height 40px
+  display block
+  border-radius 50%
+  background-color $green
+  cursor pointer
+  opacity .8
+  transition opacity .2s
+  position relative
+  &:before, &:after
+    content ''
+    position absolute
+    top 50%
+    left 50%
+    width 26px
+    height 6px
+    border-radius 3px
+    background-color $green + 80%
+    transform translate3d(-50%, -50%, 0)
+  &:after
+    transform translate3d(-50%, -50%, 0) rotate(90deg)
+  &:hover
+    opacity 1
 </style>

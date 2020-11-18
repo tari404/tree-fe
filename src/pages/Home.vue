@@ -32,7 +32,7 @@
     </div>
     <div class="right-part">
       <div class="home-menus">
-        <router-link to="/p" class="post-button"></router-link>
+        <router-link to="/p" class="tree-button-add"></router-link>
       </div>
       <img src="@/assets/images/bud.png" alt="bud" />
     </div>
@@ -147,7 +147,7 @@ export default defineComponent({
   .post-date
     margin-bottom 32px
     font-family 'Quicksand'
-    font-weight 600
+    font-weight 900
     font-size 36px
     line-height 1.25em
     color $red
@@ -184,7 +184,7 @@ export default defineComponent({
 
 .post[latest]
   .post-date
-    font-weight 400
+    font-weight 600
     font-size 54px
     opacity 1
   .chapter-symbol
@@ -282,30 +282,6 @@ export default defineComponent({
   position absolute
   top 10px
   right 10px
-.post-button
-  width 40px
-  height 40px
-  display block
-  border-radius 50%
-  // border solid $deepGreen 4px
-  background-color $green
-  cursor pointer
-  opacity .8
-  transition opacity .2s
-  &:before, &:after
-    content ''
-    position absolute
-    top 50%
-    left 50%
-    width 26px
-    height 6px
-    border-radius 3px
-    background-color $green + 80%
-    transform translate3d(-50%, -50%, 0)
-  &:after
-    transform translate3d(-50%, -50%, 0) rotate(90deg)
-  &:hover
-    opacity 1
 
 @media screen and (max-width 800px)
   #home

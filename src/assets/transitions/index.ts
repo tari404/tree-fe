@@ -1,12 +1,15 @@
 import { Ruler } from '@/assets/lib'
 
 import home2node from './home2node'
+import home2publish from './home2publish'
 import errorpage from './errorpage'
 
 export interface transitionInput {
   contentLayer: HTMLElement
   animLayer: HTMLElement
 }
+
+type Optional<T> = { [K in keyof T]?: T[K] }
 
 type transitionLib = {
   [key: string]:
@@ -19,19 +22,23 @@ type transitionLib = {
 
 const r = new Ruler([800])
 
+export const decorate = (el: HTMLElement, style: Optional<CSSStyleDeclaration>) => {
+  for (const key in style) {
+    el.style[key] = style[key]!
+  }
+}
+
 export const defaultOut = (input: transitionInput) => {
   const aL = input.animLayer
 
-  aL.style.transition = 'background-color .15s'
-  aL.style.backgroundColor = '#fdfbf8'
-  aL.style.opacity = '1'
+  decorate(aL, { transition: 'opacity .15s', backgroundColor: '#fdfbf8', opacity: '1' })
 
   return new Promise((resolve) => {
     aL.ontransitionend = (e) => {
       if (e.target !== aL) {
         return
       }
-      aL.style.transition = ''
+      decorate(aL, { transition: '' })
       aL.ontransitionend = null
       resolve(true)
     }
@@ -41,16 +48,14 @@ export const defaultOut = (input: transitionInput) => {
 export const defaultIn = (input: transitionInput) => {
   const aL = input.animLayer
 
-  aL.style.transition = 'opacity .15s'
-  aL.style.opacity = '0'
+  decorate(aL, { transition: 'opacity .15s', opacity: '0' })
 
   return new Promise((resolve) => {
     aL.ontransitionend = (e) => {
       if (e.target !== aL) {
         return
       }
-      aL.style.transition = ''
-      aL.style.backgroundColor = 'transparent'
+      decorate(aL, { transition: '', backgroundColor: 'transparent' })
       aL.innerHTML = ''
       aL.ontransitionend = null
       resolve(true)
@@ -60,5 +65,6 @@ export const defaultIn = (input: transitionInput) => {
 
 export const transitonLib = {
   'Home-Node': home2node(r),
+  'Home-Publish': home2publish(r),
   ErrorPage: errorpage(r),
 } as transitionLib

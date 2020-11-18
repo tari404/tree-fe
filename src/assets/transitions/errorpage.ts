@@ -1,16 +1,18 @@
 import { Ruler } from '@/assets/lib'
-import { defaultIn, transitionInput } from '.'
+import { decorate, defaultIn, transitionInput } from '.'
 
 export default (r: Ruler) => ({
   out: (input: transitionInput): Promise<boolean> => {
     const aL = input.animLayer
     const cL = input.contentLayer
 
-    aL.style.opacity = '1'
+    decorate(aL, { opacity: '1' })
 
     const msgEl = cL.querySelector('#error-message') as HTMLElement
-    msgEl.style.transition = 'transform 1s'
-    msgEl.style.transform = 'translateY(100px)'
+    decorate(msgEl, {
+      transition: 'transform 1s',
+      transform: 'translateY(100px)',
+    })
 
     const pageWidth = r.base('100vw').value()
     const pageHeight = r.base('100vh').value()
@@ -29,27 +31,28 @@ export default (r: Ruler) => ({
       maxTime = Math.max(maxTime, time + delay)
 
       const item = document.createElement('div')
-      item.style.position = 'absolute'
-      item.style.bottom = '100vh'
-      item.style.left = cover + 'px'
-      item.style.width = 2 * r + 'px'
-      item.style.height = 2 * pageHeight + 'px'
-      item.style.borderRadius = r + 'px'
-      item.style.backgroundColor = '#fdfbf8'
-      item.style.transition = `transform ${time + delay}ms ${delay}ms`
+      decorate(item, {
+        position: 'absolute',
+        bottom: '100vh',
+        left: cover + 'px',
+        width: 2 * r + 'px',
+        height: 2 * pageHeight + 'px',
+        borderRadius: r + 'px',
+        backgroundColor: '#fdfbf8',
+        transition: `transform ${time + delay}ms ${delay}ms`,
+      })
 
       aL.appendChild(item)
 
       item.offsetWidth
-      item.style.transform = 'translateY(150vh)'
+      decorate(item, { transform: 'translateY(150vh)' })
 
       cover += r * 2
     }
 
     return new Promise((resolve) => {
       setTimeout(() => {
-        msgEl.style.transition = ''
-        msgEl.style.transform = ''
+        decorate(msgEl, { transition: '', transform: '' })
         resolve(true)
       }, maxTime)
     })
