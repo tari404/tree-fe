@@ -180,7 +180,7 @@ a
   border-radius 50%
   background-color $green
   cursor pointer
-  opacity .8
+  // opacity .8
   transition opacity .2s
   position relative
   &:before, &:after
@@ -195,6 +195,6 @@ a
     transform translate3d(-50%, -50%, 0)
   &:after
     transform translate3d(-50%, -50%, 0) rotate(90deg)
-  &:hover
-    opacity 1
+  // &:hover
+  //   opacity 1
 </style>

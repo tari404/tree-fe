@@ -2,6 +2,7 @@ import { Ruler } from '@/assets/lib'
 
 import home2node from './home2node'
 import home2publish from './home2publish'
+import publish2home from './publish2home'
 import errorpage from './errorpage'
 
 export interface transitionInput {
@@ -66,5 +67,6 @@ export const defaultIn = (input: transitionInput) => {
 export const transitonLib = {
   'Home-Node': home2node(r),
   'Home-Publish': home2publish(r),
+  'Publish-Home': publish2home(r),
   ErrorPage: errorpage(r),
 } as transitionLib

@@ -199,7 +199,7 @@ export default defineComponent({
     top -50%
     left -10px
     padding 0 10px
-    height 200%
+    height 201%
     width 100%
     box-sizing content-box
     background-color $midGreen
