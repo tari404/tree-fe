@@ -1,5 +1,6 @@
 import { createStore } from 'vuex'
 import { Post, Node } from '@/types'
+import { getPanel, hello } from '@/fetcher'
 
 const testPosts: Post[] = [
   {
@@ -61,13 +62,20 @@ export default function () {
       },
     },
     actions: {
+      async HELLO() {
+        const info = await hello()
+        return info
+      },
       async PRELOAD_PAGE_HOME({ state }) {
-        const posts = await new Promise((r: (p: Post[]) => void) => {
-          setTimeout(() => {
-            r(testPosts)
-          }, Math.random() * 0 + 0)
-        })
-        state.posts = posts
+        const panel = await getPanel()
+        state.posts = panel.posts.map((p: any) => ({
+          date: p.day,
+          stems: p.stems.nodes.map((n: any) => ({
+            origin: n.title,
+            body: n.body,
+          })),
+          leaves: p.leaves.nodes.map((l: any) => l.title),
+        }))
       },
       async PRELOAD_PAGE_NODE({ state }) {
         const node = await new Promise((r: (p: Node) => void) => {

@@ -43,6 +43,7 @@
 import { defineComponent } from 'vue'
 
 import { ScrollBar, Scrollable } from '@/assets/lib'
+import { getPanel } from '@/fetcher'
 
 export default defineComponent({
   name: 'Home',

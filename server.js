@@ -3,6 +3,7 @@ const fs = require('fs'),
   resolve = (file) => path.resolve(__dirname, file)
 
 const express = require('express')
+const proxy = require('express-http-proxy')
 const favicon = require('serve-favicon')
 
 const app = express()
@@ -46,6 +47,8 @@ const serve = (path, cache) =>
 app.use(favicon('./src/assets/logo.png'))
 app.use('/dist', serve('./dist', true))
 app.use('/static', serve('./static', true))
+
+app.use('/api', proxy('http://localhost:4000/'))
 
 async function render(req, res) {
   const handleError = (err) => {
