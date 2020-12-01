@@ -5,6 +5,7 @@
     </div>
     <div id="node-body" class="node-content">
       <div :style="{ transform: `translateY(${-scrollY}px)` }">
+        <h1>{{ node && node.title }}</h1>
         <div class="markdown" v-html="bodyHTML"></div>
       </div>
     </div>
@@ -18,7 +19,7 @@ import marked from 'marked'
 import { Scrollable } from '@/assets/lib'
 
 export default defineComponent({
-  name: 'Node',
+  name: 'Stem',
   data() {
     return {
       id: this.$route.params.id as string,
@@ -34,6 +35,11 @@ export default defineComponent({
     bodyHTML(): string {
       return this.node ? marked(this.node.body) : ''
     },
+  },
+  created() {
+    if (!this.node) {
+      this.$router.push('/ops')
+    }
   },
   mounted() {
     const node = this.$el.querySelector('#node-body') as HTMLElement
@@ -93,8 +99,15 @@ export default defineComponent({
   display flex
   justify-content center
   overflow hidden
+  h1
+    margin 10px 0 40px
+    font-size 30px
+    line-height 40px
+    font-weight 500
+    color $fontGreen
   >div
     padding 0 20px
+    width 100%
     max-width 760px
     height fit-content
 

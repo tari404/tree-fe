@@ -2,7 +2,7 @@ import { createRouter, createMemoryHistory, createWebHistory } from 'vue-router'
 
 import ErrorPage from '@/pages/ErrorPage.vue'
 import Home from '@/pages/Home.vue'
-import Node from '@/pages/Node.vue'
+import Stem from '@/pages/Stem.vue'
 import Publish from '@/pages/Publish.vue'
 
 const isServer = typeof window === 'undefined'
@@ -16,9 +16,9 @@ const routes = [
     component: Home,
   },
   {
-    path: '/n/:id',
-    name: 'Node',
-    component: Node,
+    path: '/s/:id',
+    name: 'Stem',
+    component: Stem,
   },
   {
     path: '/p',

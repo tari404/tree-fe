@@ -21,8 +21,8 @@
       <p class="edit-label">正文</p>
       <textarea v-model="inputContent" autofocus class="prime-input main-textarea" />
       <div class="edit-buttons">
-        <div>发 布</div>
-        <div><i class="ri-save-3-fill"></i>保 存</div>
+        <div @click="toPublish" :active="password || undefined">发 布</div>
+        <!-- <div><i class="ri-save-3-fill"></i>保 存</div> -->
       </div>
     </div>
     <div class="edit-to-preview"></div>
@@ -41,11 +41,13 @@ import { defineComponent, nextTick } from 'vue'
 import marked from 'marked'
 
 import { Scrollable } from '@/assets/lib'
+import { publish } from '@/fetcher'
 
 export default defineComponent({
   name: 'Publish',
   data() {
     return {
+      password: '',
       useExistedLeaf: false,
       inputTitle: '',
 
@@ -59,6 +61,8 @@ export default defineComponent({
     }
   },
   mounted() {
+    this.password = localStorage.getItem('seed') || ''
+
     this.inputTitle = sessionStorage.getItem('SAVED_BLOG_TITLE') || ''
     this.inputContent = sessionStorage.getItem('SAVED_BLOG_DRAFT') || ''
 
@@ -90,6 +94,26 @@ export default defineComponent({
   methods: {
     updateSize() {
       this.s!.updateSize()
+    },
+    async toPublish() {
+      const data = await publish(
+        {
+          title: this.inputTitle,
+          tags: [],
+          body: this.inputContent,
+        },
+        this.password
+      )
+      if (!data) {
+        // TODO
+        alert('发布失败')
+      } else {
+        // TODO
+        alert('发布成功')
+        sessionStorage.removeItem('SAVED_BLOG_TITLE')
+        sessionStorage.removeItem('SAVED_BLOG_DRAFT')
+        this.$router.push(`/n/${data.id}`)
+      }
     },
   },
 })
@@ -127,14 +151,16 @@ export default defineComponent({
       display flex
       justify-content center
       align-items center
-      background-color $midGreen
+      background-color $gray
       color $white
-      cursor pointer
       transition background-color .2s
-      &:hover
-        background-color $green - 20%
       i
         margin-right 8px
+    >div[active]
+      background-color $midGreen
+      cursor pointer
+      &:hover
+        background-color $green - 20%
 
 .input-tag
   font-family 14px

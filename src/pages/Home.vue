@@ -8,8 +8,8 @@
             <i class="chapter-symbol"></i>
             <ul>
               <li v-for="(stem, i) in post.stems" :key="i">
-                <i v-if="pidx === 0" class="title-symbol">{{ stem.origin }}</i>
-                <router-link to="/n/1" class="leaf">{{ stem.origin }}</router-link>
+                <i v-if="pidx === 0" class="title-symbol">{{ stem.title }}</i>
+                <router-link :to="`/s/${stem.id}`" class="leaf">{{ stem.title }}</router-link>
                 <p class="content">{{ stem.body }}</p>
               </li>
             </ul>
@@ -18,8 +18,8 @@
             <i class="chapter-symbol"></i>
             <ul>
               <li v-for="(leaf, i) in post.leaves" :key="i">
-                <i v-if="pidx === 0" class="title-symbol">{{ leaf }}</i>
-                <router-link to="/n/1" class="leaf">{{ leaf }}</router-link>
+                <i v-if="pidx === 0" class="title-symbol">{{ leaf.title }}</i>
+                <router-link :to="`/l/${leaf.id}`" class="leaf">{{ leaf.title }}</router-link>
               </li>
             </ul>
           </div>

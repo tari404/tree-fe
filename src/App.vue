@@ -18,7 +18,7 @@ export default defineComponent({
     const pageName = this.$route.name as string
     const action = 'PRELOAD_PAGE_' + pageName.toUpperCase()
     if (this.$store._actions[action]) {
-      await this.$store.dispatch(action)
+      await this.$store.dispatch(action, this.$route.params)
     }
   },
   data() {
@@ -59,7 +59,7 @@ export default defineComponent({
 
       const action = 'PRELOAD_PAGE_' + t.toUpperCase()
       if (this.$store._actions[action]) {
-        await this.$store.dispatch(action)
+        await this.$store.dispatch(action, to.params)
       }
 
       next()
