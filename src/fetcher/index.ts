@@ -1,11 +1,18 @@
 import axios from 'axios'
+import https from 'https'
 import { createStem, createStemInput, panel, stemOfID } from './search'
 
 const isServer = typeof window === 'undefined'
-const isDev = process.env.NODE_ENV === 'development'
+const isProd = process.env.NODE_ENV !== 'development'
 
 const client = axios.create({
-  baseURL: isServer && isDev ? 'http://localhost:4000/' : '/api',
+  baseURL: isServer ? 'http://localhost:4000/' : '/api',
+  httpsAgent:
+    isServer && isProd
+      ? new https.Agent({
+          rejectUnauthorized: false,
+        })
+      : undefined,
 })
 
 export async function hello(): Promise<string> {

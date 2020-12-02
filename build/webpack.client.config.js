@@ -24,6 +24,11 @@ module.exports = merge(baseConfig, {
       },
     },
   },
+  resolve: {
+    fallback: {
+      https: false,
+    },
+  },
   plugins: isProd
     ? [
         new VueSSRClientPlugin(),

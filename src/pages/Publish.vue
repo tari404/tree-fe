@@ -112,7 +112,7 @@ export default defineComponent({
         alert('发布成功')
         sessionStorage.removeItem('SAVED_BLOG_TITLE')
         sessionStorage.removeItem('SAVED_BLOG_DRAFT')
-        this.$router.push(`/n/${data.id}`)
+        this.$router.push(`/s/${data.id}`)
       }
     },
   },
